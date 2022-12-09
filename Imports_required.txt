@@ -1,0 +1,17 @@
+To run this program, you first need pip installed. If you already have python installed, you probally already have pip. Otherwise, check this guide out
+https://pip.pypa.io/en/stable/installation/
+
+Copy and paste into terminal/console to install modules requried
+
+pip install tensorflow
+pip install time
+pip install keras
+pip install LiveStockPrice
+pip install os
+pip install numpy
+pip install pandas
+pip install yahoo_fin
+pip install yfinance
+pip install bs4
+pip install html5lib
+
