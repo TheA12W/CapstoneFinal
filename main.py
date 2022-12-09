@@ -27,13 +27,23 @@ import numpy as np
 import pandas as pd
 import random
 import yfinance as yf
+
 import StockPrices
+import html5lib
+from bs4 import BeautifulSoup
 from StockPrices import stock_price
 # set seed, so we can get the same results after rerunning several times
 np.random.seed(314)
 tf.random.set_seed(314)
 random.seed(314)
 
+
+
+"""
+Inspiration/some code from PythonCode
+
+To see full sources, check works cited, source above was most helpful for AI model
+"""
 
 def shuffle_in_unison(a, b):
     # shuffle two arrays in the same way
@@ -146,7 +156,7 @@ def load_data(ticker, n_steps=50, scale=True, shuffle=True, lookup_step=1, split
     return result
 
 
-def create_model(sequence_length, n_features, units=256, cell=LSTM, n_layers=2, dropout=0.3,
+def create_model(sequence_length, n_features, units=512, cell=LSTM, n_layers=2, dropout=0.3,
                  loss="mean_absolute_error", optimizer="rmsprop", bidirectional=False):
     model = Sequential()
     for i in range(n_layers):
@@ -204,15 +214,15 @@ def Individual_Stocks(ticker):
     # test ratio size, 0.2 is 20%
     TEST_SIZE = 0.2
     # features to use
-    FEATURE_COLUMNS = ["adjclose", "volume", "open", "high", "low"]
+    FEATURE_COLUMNS = ["adjclose", "volume", "open", "high", "low","VIX"]
     # date now
     date_now = time.strftime("%Y-%m-%d")
     # model parameters
     N_LAYERS = 2
     # LSTM cell
     CELL = LSTM
-    # 256 LSTM neurons
-    UNITS = 1024
+    # 512 LSTM neurons
+    UNITS = 512
     # 40% dropout
     DROPOUT = 0.4
     # whether to use bidirectional RNNs
@@ -224,10 +234,10 @@ def Individual_Stocks(ticker):
     LOSS = "huber_loss"
     OPTIMIZER = "adam"
     BATCH_SIZE = 64
-    EPOCHS = 2
-    # Amazon stock market
+    EPOCHS = 1
+    
     ticker_data_filename = os.path.join("data", f"{ticker}_{date_now}.csv")
-    # model name to save, making it as unique as possible based on parameters
+
     model_name = f"{date_now}_{ticker}-{shuffle_str}-{scale_str}-{split_by_date_str}-\
     {LOSS}-{OPTIMIZER}-{CELL.__name__}-seq-{N_STEPS}-step-{LOOKUP_STEP}-layers-{N_LAYERS}-units-{UNITS}"
     if BIDIRECTIONAL:
@@ -338,7 +348,7 @@ def Individual_Stocks(ticker):
     # predict the future price
 
     future_price = predict(model, data)
-    market_price = StockPrices.stock_price.stock_price(ticker)
+    market_price = float(StockPrices.stock_price.stock_price(ticker).replace(",",""))
     percent_dif = ((future_price-((market_price)))/market_price) * 100
 
     # we calculate the accuracy by counting the number of positive profits
@@ -350,7 +360,7 @@ def Individual_Stocks(ticker):
     print(f"{LOSS} loss:", loss)
     print("Mean Absolute Error:", mean_absolute_error)
     print("Accuracy score:", accuracy_score)
-    print(percent_dif)
+    print("The percent difference is " + str(percent_dif))
     return [percent_dif, future_price]
 
 
@@ -388,13 +398,17 @@ def DOW_test1():
     dr = (AXP + AMGN+AAPL + BA + CAT + CSCO + CVX + GS + HD + HON + IBM + INTC + JNJ + KO + JPM +
           MCD + MMM+MRK + MSFT + NKE + PG + TRV + UNH + CRM + VZ + V + WBA + WMT + DIS + DOW)/.1492
     return dr
+#calculates dow a different way
+def Dow_test2():
+    rt = Individual_Stocks("^DJI")[1]
+    return rt
 
-
-print("The DOW Jones expected price after 30 days is: " + str(DOW_test1()))
+#prints out expected after average
+dow_true = (Dow_test2() + DOW_test1()) /2
+print(dow_true)
 
 
 # If you want to modify, you are allowed to
 def single_prediction(ticker):
-    print("The predicted price for: " + ticker +
-          " after 30 days in [future price, percent difference] is: " + Individual_Stocks(ticker))
+    print("The predicted price for: " + ticker + " after 30 days in [future price, percent difference] is: " + Individual_Stocks(ticker))
 # single_prediction("AAPL")
